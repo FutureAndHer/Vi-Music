@@ -9,6 +9,11 @@ export const commonParams = {
   needNewCode: '0'
 }
 
-export const options = {}
+export const jsonpOptions = {
+  param: 'jsonpCallback'
+}
+
+export const jsonOptions = {
+}
 
 export const ERR_OK = 0

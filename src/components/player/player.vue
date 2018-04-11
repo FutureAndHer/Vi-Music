@@ -14,8 +14,8 @@
           <div class="back" @click="back">
             <i class="icon-back"></i>
           </div>
-          <h1 class="title"></h1>
-          <h2 class="subtitle"></h2>
+          <h1 class="title" v-html="currentSong.name"></h1>
+          <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
         <div class="middle">
           <div class="middle-l">
@@ -39,6 +39,7 @@
               {{format(currentTime)}}
             </span>
             <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
             </div>
             <span class="time time-r">
               {{format(currentSong.duration)}}
@@ -88,7 +89,8 @@
 <script type="text/ecmascript-6">
   import {mapGetters, mapMutations} from 'vuex'
   import animations from 'create-keyframe-animation'
-  import {prefixStyle} from "common/js/dom";
+  import {prefixStyle} from 'common/js/dom'
+  import ProgressBar from 'base/progress-bar/progress-bar'
 
   const transform = prefixStyle('transform')
 
@@ -112,6 +114,9 @@
       },
       disabledCls() {
         return this.songReady ? '' : 'disable'
+      },
+      percent() {
+        return this.currentTime / this.currentSong.duration
       },
       ...mapGetters([
         'fullScreen',
@@ -227,6 +232,12 @@
         const minute = interval / 60 | 0
         const second = interval % 60 < 10 ? `0${interval % 60}` : interval % 60
         return `${minute}:${second}`
+      },
+      onProgressBarChange(percent) {
+        this.$refs.audio.currentTime = percent * this.currentSong.duration
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
     },
     watch: {
@@ -241,6 +252,9 @@
           newPlaying ? audio.play() : audio.pause()
         })
       }
+    },
+    components: {
+      ProgressBar
     }
   }
 </script>

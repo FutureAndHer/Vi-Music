@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend">
+  <div class="recommend" ref="recommend">
     <scroll ref="scroll" class="recommend-content" :data="category">
       <div>
         <div v-if="focus.length" class="slider-wrapper">
@@ -41,8 +41,10 @@
   import Slider from 'base/slider/slider'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
+  import {playListMixin} from 'common/js/mixin'
 
   export default {
+    mixins: [playListMixin],
     data() {
       return {
         focus: [],
@@ -53,6 +55,10 @@
         this._getRecommend()
     },
     methods: {
+      handlePlayList(playList) {
+        const bottom = playList.length > 0 ? '60px' : ''
+        this.$refs.recommend.style.bottom = bottom
+      },
       _getRecommend() {
         getRecommend().then((res) => {
           if (res.code === ERR_OK) {
@@ -63,7 +69,6 @@
       },
       loadSliderImage() {
         if (!this.hasLoadSliderImage) {
-          this.$refs.scroll.refresh()
           this.hasLoadSliderImage = true
         }
       }

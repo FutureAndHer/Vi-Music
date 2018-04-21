@@ -46,8 +46,8 @@
             </span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disabledCls">
               <i @click="prev" class="icon-prev"></i>
@@ -84,7 +84,8 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"></audio>
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"
+           @ended="end"></audio>
   </div>
 </template>
 
@@ -94,6 +95,8 @@
   import {prefixStyle} from 'common/js/dom'
   import ProgressBar from 'base/progress-bar/progress-bar'
   import ProgressCircle from 'base/progress-circle/progress-circle'
+  import {mode} from 'common/js/config'
+  import {shuffle} from 'common/js/util'
 
   const transform = prefixStyle('transform')
 
@@ -113,6 +116,9 @@
       playIcon() {
         return this.playing ? 'icon-pause' : 'icon-play'
       },
+      iconMode() {
+        return 'icon-' + (this.playMode === mode.sequence ? 'sequence' : this.playMode === mode.loop ? 'loop' : 'random')
+      },
       playIcon_mini() {
         return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
       },
@@ -127,15 +133,37 @@
         'playList',
         'currentSong',
         'playing',
-        'currentIndex'
+        'currentIndex',
+        'playMode',
+        'sequenceList'
       ])
     },
     methods: {
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN_STATE',
         setPlayingState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CURRENT_INDEX_STATE'
+        setCurrentIndex: 'SET_CURRENT_INDEX_STATE',
+        setPlayMode: 'SET_PLAY_MODE_STATE',
+        setPlayList: 'SET_PLAY_LIST_STATE'
       }),
+      changeMode() {
+        const newMode = (this.playMode + 1) % 3
+        this.setPlayMode(newMode)
+        let list = null
+        if (newMode === mode.random) {
+          list = shuffle(this.sequenceList)
+        } else {
+          list = this.sequenceList
+        }
+        this.resetCurrentIndex(list)
+        this.setPlayList(list)
+      },
+      resetCurrentIndex(list) {
+        let index = list.findIndex((item) => {
+          return this.currentSong.id === item.id
+        })
+        this.setCurrentIndex(index)
+      },
       back() {
         this.setFullScreen(false)
       },
@@ -198,6 +226,17 @@
         if (!this.songReady) return
         this.setPlayingState(!this.playing)
       },
+      end() {
+        if (this.playMode === mode.loop) {
+          this.loop()
+        } else {
+          this.next()
+        }
+      },
+      loop() {
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
+      },
       next() {
         if (!this.songReady) return
         let index = this.currentIndex + 1
@@ -245,7 +284,10 @@
       }
     },
     watch: {
-      currentSong() {
+      currentSong(newSong, oldSong) {
+        if (newSong.id === oldSong.id) {
+          return
+        }
         this.$nextTick(() => {
           this.$refs.audio.play()
         })

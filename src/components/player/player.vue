@@ -251,7 +251,7 @@
       },
       prev() {
         if (!this.songReady) return
-        let index = this.currentIndex + 1
+        let index = this.currentIndex - 1
         if (index == -1) {
           index = this.playList.length - 1
         }

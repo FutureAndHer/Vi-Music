@@ -1,5 +1,5 @@
 import jsonp from 'common/js/jsonp'
-import {commonParams, jsonOptions} from './config'
+import {commonParams,jsonpOptions, jsonOptions} from './config'
 
 export function getRecommend() {
   const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
@@ -9,4 +9,26 @@ export function getRecommend() {
   })
 
   return jsonp(url, data, jsonOptions)
+}
+
+export function getSongList(dissid) {
+  const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+  const data = Object.assign({}, commonParams, {
+    disstid: dissid,
+    type: 1,
+    json: 1,
+    utf8: 1,
+    onlysong: 0,
+    platform: 'yqq',
+    hostUin: 0,
+    needNewCode: 0,
+    format: 'jsonp',
+    loginUin: 0,
+    g_tk: 5381,
+    inCharset: 'utf8',
+    outCharset: 'utf-8',
+    notice: 0
+  })
+
+  return jsonp(url, data, jsonpOptions)
 }

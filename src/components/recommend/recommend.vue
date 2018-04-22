@@ -15,7 +15,7 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li v-for="item in category" class="item">
+            <li v-for="item in category" class="item" @click="selectItem(item)">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.cover"/>
               </div>
@@ -32,6 +32,7 @@
         <loading></loading>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -42,6 +43,7 @@
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
   import {playListMixin} from 'common/js/mixin'
+  import {mapMutations} from 'vuex'
 
   export default {
     mixins: [playListMixin],
@@ -55,6 +57,15 @@
         this._getRecommend()
     },
     methods: {
+      ...mapMutations({
+        setDisc: 'SET_DISC_STATE'
+      }),
+      selectItem(item) {
+        this.$router.push({
+          path: `/recommend/${item.content_id}`
+        })
+        this.setDisc(item)
+      },
       handlePlayList(playList) {
         const bottom = playList.length > 0 ? '60px' : ''
         this.$refs.recommend.style.bottom = bottom

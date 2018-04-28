@@ -30,10 +30,6 @@
           </div>
         </div>
         <div class="bottom">
-          <div class="dot-wrapper">
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
           <div class="progress-wrapper">
             <span class="time time-l">
               {{format(currentTime)}}
@@ -79,29 +75,33 @@
             <i @click.stop="togglePlaying" :class="playIcon_mini" class="icon-mini"></i>
           </progress-circle>
         </div>
-        <div class="control">
+        <div class="control" @click.stop="showPlaylist">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <playlist ref="playlist"></playlist>
     <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"
            @ended="end"></audio>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-  import {mapGetters, mapMutations} from 'vuex'
+  import {mapGetters, mapMutations, mapActions} from 'vuex'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from 'common/js/dom'
   import ProgressBar from 'base/progress-bar/progress-bar'
   import ProgressCircle from 'base/progress-circle/progress-circle'
   import {mode} from 'common/js/config'
   import {shuffle} from 'common/js/util'
+  import Playlist from 'components/playlist/playlist'
+  import {playerMixin} from 'common/js/mixin'
 
   const transform = prefixStyle('transform')
 
 
   export default {
+    mixins: [playerMixin],
     data() {
       return {
         songReady: false,
@@ -116,9 +116,6 @@
       playIcon() {
         return this.playing ? 'icon-pause' : 'icon-play'
       },
-      iconMode() {
-        return 'icon-' + (this.playMode === mode.sequence ? 'sequence' : this.playMode === mode.loop ? 'loop' : 'random')
-      },
       playIcon_mini() {
         return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
       },
@@ -130,40 +127,17 @@
       },
       ...mapGetters([
         'fullScreen',
-        'playList',
-        'currentSong',
         'playing',
         'currentIndex',
-        'playMode',
-        'sequenceList'
       ])
     },
     methods: {
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN_STATE',
-        setPlayingState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CURRENT_INDEX_STATE',
-        setPlayMode: 'SET_PLAY_MODE_STATE',
-        setPlayList: 'SET_PLAY_LIST_STATE'
       }),
-      changeMode() {
-        const newMode = (this.playMode + 1) % 3
-        this.setPlayMode(newMode)
-        let list = null
-        if (newMode === mode.random) {
-          list = shuffle(this.sequenceList)
-        } else {
-          list = this.sequenceList
-        }
-        this.resetCurrentIndex(list)
-        this.setPlayList(list)
-      },
-      resetCurrentIndex(list) {
-        let index = list.findIndex((item) => {
-          return this.currentSong.id === item.id
-        })
-        this.setCurrentIndex(index)
-      },
+      ...mapActions([
+        'savePlayHistory'
+      ]),
       back() {
         this.setFullScreen(false)
       },
@@ -222,6 +196,9 @@
           x, y, scale
         }
       },
+      showPlaylist() {
+        this.$refs.playlist.show()
+      },
       togglePlaying() {
         if (!this.songReady) return
         this.setPlayingState(!this.playing)
@@ -263,6 +240,7 @@
       },
       ready() {
         this.songReady = true
+        this.savePlayHistory(this.currentSong)
       },
       error() {
         this.songReady = true
@@ -285,6 +263,9 @@
     },
     watch: {
       currentSong(newSong, oldSong) {
+        if (!newSong.id) {
+          return
+        }
         if (newSong.id === oldSong.id) {
           return
         }
@@ -301,7 +282,8 @@
     },
     components: {
       ProgressBar,
-      ProgressCircle
+      ProgressCircle,
+      Playlist
     }
   }
 </script>
@@ -358,8 +340,8 @@
       .middle
         position: fixed
         width: 100%
-        top: 80px
-        bottom: 170px
+        top: 150px
+        bottom: 130px
         white-space: nowrap
         font-size: 0
         .middle-l

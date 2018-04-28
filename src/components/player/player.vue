@@ -55,7 +55,7 @@
               <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon icon-not-favorite"></i>
+              <i class="icon" @click="toggleFavorite(currentSong)" :class="getFavoriteIcon(currentSong)"></i>
             </div>
           </div>
         </div>
@@ -216,8 +216,11 @@
       },
       next() {
         if (!this.songReady) return
+        if (this.playList.length <= 1) {
+          return
+        }
         let index = this.currentIndex + 1
-        if (index == this.playList.length) {
+        if (index >= this.playList.length) {
           index = 0
         }
         this.setCurrentIndex(index)
@@ -228,8 +231,11 @@
       },
       prev() {
         if (!this.songReady) return
+        if (this.playList.length <= 1) {
+          return
+        }
         let index = this.currentIndex - 1
-        if (index == -1) {
+        if (index <= -1) {
           index = this.playList.length - 1
         }
         this.setCurrentIndex(index)
